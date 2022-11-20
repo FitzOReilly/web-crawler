@@ -1,6 +1,6 @@
 use clap::Parser;
 use scraper::{Html, Selector};
-use std::error::Error;
+use std::{collections::HashSet, error::Error};
 
 /// Simple webcrawler
 
@@ -17,13 +17,17 @@ fn process_url(url: &str) -> Result<(), Box<dyn Error>> {
     let document = Html::parse_document(&body);
     let selector = Selector::parse("a").expect("Parser error");
 
+    let mut found_urls = HashSet::new();
+
     for element in document.select(&selector) {
         assert_eq!("a", element.value().name());
 
-        for attr in element.value().attrs().filter(|&(name, _)| name == "href") {
-            println!("{:?}", attr);
+        for (_, url) in element.value().attrs().filter(|&(name, _)| name == "href") {
+            found_urls.insert(url.to_string());
         }
     }
+
+    println!("{:#?}", found_urls);
 
     Ok(())
 }
